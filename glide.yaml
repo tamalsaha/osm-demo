@@ -1,0 +1,20 @@
+package: github.com/tamalsaha/osm-demo
+import:
+- package: github.com/appscode/go
+- package: github.com/appscode/kubed
+  version: master
+- package: github.com/appscode/osm
+  version: master
+- package: github.com/aws/aws-sdk-go
+  version: v1.12.54
+- package: github.com/ghodss/yaml
+  version: v1.0.0
+- package: github.com/go-openapi/spec
+- package: github.com/graymeta/stow
+  repo: https://github.com/appscode/stow.git
+  version: master
+  vcs: git
+- package: k8s.io/apimachinery
+  version: kubernetes-1.8.3
+- package: k8s.io/client-go
+  version: v5.0.1
