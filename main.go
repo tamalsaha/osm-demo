@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/appscode/go/types"
+	stringz "github.com/appscode/go/strings"
 	api "github.com/appscode/kubed/pkg/config"
 	otx "github.com/appscode/osm/context"
 	"github.com/aws/aws-sdk-go/aws"
@@ -67,6 +68,7 @@ func main() {
 				Credentials: credentials.NewStaticCredentials(string(keyID), string(key), ""),
 				Region:      aws.String("us-east-1"),
 			}
+			config.WithLogLevel(aws.LogDebugWithHTTPBody)
 			sess, err = session.NewSessionWithOptions(session.Options{
 				Config: *config,
 				// Support MFA when authing using assumed roles.
@@ -81,7 +83,7 @@ func main() {
 		out, err := svc.GetBucketLocation(&_s3.GetBucketLocationInput{
 			Bucket: types.StringP(spec.Bucket),
 		})
-		nc.Config[s3.ConfigRegion] = types.String(out.LocationConstraint)
+		nc.Config[s3.ConfigRegion] = stringz.Val(types.String(out.LocationConstraint), "us-east-1")
 	} else {
 		nc.Config[s3.ConfigEndpoint] = spec.Endpoint
 		if u, err := url.Parse(spec.Endpoint); err == nil {
