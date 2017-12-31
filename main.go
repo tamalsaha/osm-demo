@@ -1,24 +1,24 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
-	otx "github.com/appscode/osm/context"
 	"github.com/appscode/go/types"
 	api "github.com/appscode/kubed/pkg/config"
+	otx "github.com/appscode/osm/context"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	_s3 "github.com/aws/aws-sdk-go/service/s3"
-	"github.com/graymeta/stow/s3"
 	"github.com/graymeta/stow"
-	"log"
-	"encoding/json"
-	"fmt"
-	"os"
+	"github.com/graymeta/stow/s3"
 )
 
 type S3Spec struct {
@@ -29,16 +29,17 @@ type S3Spec struct {
 
 func main() {
 	config := map[string][]byte{
-		api.AWS_ACCESS_KEY_ID: []byte(os.Getenv(api.AWS_ACCESS_KEY_ID)),
+		api.AWS_ACCESS_KEY_ID:     []byte(os.Getenv(api.AWS_ACCESS_KEY_ID)),
 		api.AWS_SECRET_ACCESS_KEY: []byte(os.Getenv(api.AWS_SECRET_ACCESS_KEY)),
 	}
 	nc := &otx.Context{
 		Name:   "kubedb",
+		Provider: s3.Kind,
 		Config: stow.ConfigMap{},
 	}
 	spec := S3Spec{
 		Endpoint: "s3.amazonaws.com",
-		Bucket: "kubed22",
+		Bucket:   "kubed22",
 	}
 
 	keyID, foundKeyID := config[api.AWS_ACCESS_KEY_ID]
@@ -90,4 +91,32 @@ func main() {
 
 	b, _ := json.MarshalIndent(nc, "", "  ")
 	fmt.Println(string(b))
+
+	loc, err := stow.Dial(nc.Provider, nc.Config)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	c, err := loc.Container(spec.Bucket)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	srcPath := "/home/tamal/Downloads/nginx-deployment.yaml"
+
+	si, err := os.Stat(srcPath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	in, err := os.Open(srcPath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer in.Close()
+
+	_, err = c.Put("x1/nginx-deployment.yaml", in, si.Size(), nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
